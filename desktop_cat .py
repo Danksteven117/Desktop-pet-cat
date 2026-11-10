@@ -2,7 +2,7 @@
 """
 桌面宠物猫 - Desktop Pet Cat
 形象参考:虎斑白底、半眯眼、嫌弃脸
-
+ 
 操作:
   左键拖动    - 移动位置
   双击        - 撸一下
@@ -20,13 +20,13 @@ from datetime import datetime
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction, QActionGroup
 from PyQt5.QtCore import Qt, QTimer, QPoint
 from PyQt5.QtGui import QPainter, QPainterPath, QColor, QBrush, QPen, QFont, QCursor
-
-
+ 
+ 
 SIZE_OPTIONS = [("迷你", 0.5), ("小", 0.75), ("中(默认)", 1.0),
                 ("大", 1.5), ("超大", 2.0)]
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".desktop_cat.json")
-
-
+ 
+ 
 def load_scale():
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -34,74 +34,78 @@ def load_scale():
         return v if 0.3 <= v <= 3.0 else 1.0
     except Exception:
         return 1.0
-
-
+ 
+ 
 def save_scale(v):
     try:
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump({"scale": v}, f)
     except Exception:
         pass
-
-
-# 台词库(每句尽量不超过 14 个字,气泡放得下)
+ 
+ 
+# 台词库:一只贱兮兮但不凶的公猫(每句尽量不超过 14 个字,气泡放得下)
 IDLE_LINES = [
-    "哼。", "喵~", "......", "无聊。", "别看我。", "摸鱼中。", "打扰了。",
-    "困。", "饿了。",
-    "又在摸鱼?算我一个。", "代码写完了吗?", "你的 bug 我都看见了。",
-    "我不是胖,是毛蓬。", "猫生苦短,及时摸鱼。", "再看收费了。",
-    "你盯着我干嘛,好看?", "本喵今天不营业。", "你的发际线还好吗?",
-    "这屏幕比你好看。", "我在监督你工作。", "发呆是一门艺术。",
-    "工资发了吗?请我吃鱼。", "今天也是嫌弃你的一天。",
-    "你刚才那个表情,我记住了。", "宇宙的尽头是罐头。",
-    "我的尾巴比你的进度快。", "你已经盯屏幕很久了。",
+    "哼哼~", "略略略。", "嘿嘿嘿……", "嘿,看这边。", "喵~(假装没人叫我)",
+    "你刚才是不是偷看我?", "我这颜值,不收费?", "继续工作,我就看着。",
+    "杯子放那儿很危险哦。", "我在酝酿一个坏主意。", "别紧张,我只是路过。",
+    "你猜我在想什么?", "你的键盘,我盯上了。", "我最近又帅了。",
+    "我不是胖,是有料。", "半夜三点跑酷,约吗?", "你猜我敢不敢推下去?",
+    "今天也想蹭你一下。", "我就静静看着你加班。", "罐头呢?我就问问。",
+    "偷偷告诉你:我没洗脸。", "据说猫有九条命,我试试。",
+    "发现一只帅猫,是我。", "别回头,我在你后面。", "我没捣乱,我在巡视。",
+    "你的鼠标,看起来很好玩。", "我才没盯着你呢。", "你笑什么?我很严肃。",
 ]
 LATE_NIGHT_LINES = [
-    "还不睡?头发不要了?", "凌晨了喂,快睡!", "熬夜的人最帅,才怪。",
-    "夜猫子本猫都困了。",
+    "这么晚还不睡?陪我跑酷。", "凌晨了哦,该给我开罐头。",
+    "夜猫子上线,你也是?", "三点了,我要开始表演了。", "别熬了,陪我玩会儿。",
 ]
-MORNING_LINES = [
-    "早啊,打工人。", "早饭吃了没?", "一日之计在于摸鱼。",
-]
-NOON_LINES = ["该吃饭了吧?", "午饭吃啥?带我一口。", "饭后犯困,懂的都懂。"]
+MORNING_LINES = ["早啊,今天也帅得很。", "早饭有我的份吗?", "起这么早,是为了见我?"]
+NOON_LINES = ["吃饭咯?给我留一口。", "午饭香吗?我就闻闻。", "吃完饭,陪我晒晒。"]
 POKE_LINES = [
-    "干嘛?", "放我下来。", "哎?", "再拽我咬你!", "喂喂喂,没礼貌!",
-    "我的毛!", "非礼啦喵!", "拎猫要付费的。", "本喵不是玩具!",
-    "你是不是想挨挠?",
+    "哎哟,手很欠嘛。", "想抱我?先交罐头。", "嘿,咱俩谁欠谁?", "哈?想带我去哪?",
+    "轻点轻点,我怕痒。", "拎起来也帅,没办法。", "再拽,我就装死。",
+    "被我的魅力迷住了?", "松手松手,毛乱了。",
 ]
 PAT_LINES = [
-    "喵喵喵!", "呼噜噜...", "再摸摸~", "哼哼~", "别烦我啦", "算你有眼光。",
-    "往左一点...对...", "收费:一条小鱼干。", "摸够了没有?",
-    "再摸要收摸摸费了。", "你的手,还行。",
+    "嗯~对对对,就这儿。", "继续,别停。", "摸一次一条小鱼干。",
+    "嘿嘿,你也喜欢我吧?", "再摸一下,我考虑考虑。", "呼噜呼噜~(别告诉别人)",
+    "哼,算你有眼光。", "手艺不错,留下吧。", "嗯……左边,左边!",
+    "摸够了?我还没够。",
 ]
 SASS_LINES = [
-    "键盘上不许放脚。", "投喂请按响铃。", "我在思考猫生。", "别看了,不加班。",
-    "我睡觉的时候最帅。", "你的待办事项在哭泣。", "不想上班,想上树。",
-    "老板不在,我就是老板。", "今天的摸鱼 KPI 完成。",
-    "代码是你写的,锅我不背。", "我只负责可爱,其他免谈。",
-    "你再看,我就长在屏幕上。", "建议:先喝水再加班。",
-    "给我开个罐头再聊。", "别回头,身后有只猫(是我)。",
-    "你敲键盘的样子像在弹琴。", "存档了吗?我不管,问就是没有。",
-    "你这个需求,我拒绝。", "我的爪子很贵,不外借。",
-    "别问,问就是在加班(睡觉)。",
+    "键盘我先坐为敬。", "我不是在睡觉,是在养帅。", "桌上的杯子,我负责推下去。",
+    "你的鼠标指针,我盯很久了。", "我只吃罐头,不吃亏。", "你让我别捣乱,我偏要。",
+    "你猜我什么时候跳你腿上?", "本猫今天心情:想搞事。", "你忙你的,我搞我的。",
+    "别人家的猫乖,我不一样。", "你这表情,我可以截图吗?", "我才没想你,只是路过。",
+    "这个位置,今天归我了。", "小鱼干在哪?我闻到了。", "我长得帅,所以我无辜。",
+    "偷偷踩一下回车键,嘿嘿。", "看我的屁股,是你的荣幸。", "你再看我,我就害羞了。",
+    "我要是会打字,早就当老板了。", "嘘,别告诉别人我在偷懒。",
 ]
 WAKE_LINES = [
-    "唔...谁啊?", "我才没睡着!", "几点了...", "梦里正吃鱼呢!",
-    "吵醒猫要赔鱼干。",
+    "唔……谁打扰我的美梦?", "我没睡,我在冥想。", "咦?刚才有罐头吗?",
+    "我睡了吗?帅得睡着了。", "嗯?刚才是不是有人摸我?",
 ]
-POMO_START_LINES = ["专注25分钟,开始!", "开工,我给你站岗。", "本喵陪你卷。"]
+POMO_START_LINES = ["专注25分钟,我盯着你。", "开工!我负责监工和捣乱。", "去吧,我给你暖椅子。"]
 POMO_END_LINES = [
-    "时间到!休息5分钟~", "番茄熟了,摸会儿鱼。", "25分钟到,伸个懒腰!",
-    "辛苦了,喝口水。",
+    "时间到!来摸我休息。", "番茄熟了,陪我玩玩。", "25分钟到,该开罐头了。",
+    "干得不错,奖励我一条鱼。",
 ]
 CHIME_LINES = [
-    "{h}点整啦~", "{h}点啦,动一动!", "{h}点了,该喝水了。",
-    "{h}点,摸鱼进度条+1。",
+    "{h}点啦,陪我玩会儿?", "{h}点了,该喂猫了。", "{h}点整,我宣布开饭。",
+    "{h}点,你还在加班?",
 ]
-
+HELLO_LINES = ["哟,来啦?", "嘿,想我了?", "哟,帅猫在此。"]
+MEOW_LINES = ["喵~", "喵?(装乖)", "喵呜~(骗你的)", "咪~"]
+FOLLOW_ON_LINES = ["好嘛,跟着你。", "嘿嘿,我跟着你喽。"]
+FOLLOW_OFF_LINES = ["不跟了,我要自由。", "行,你自己走吧。"]
+POMO_CANCEL_LINES = ["不专注了?来陪我玩。", "嘿,偷懒被我看见了。"]
+SCALE_LINES = ["这样我更帅了?", "尺寸变了,魅力不变。", "行,随你,我都帅。"]
+ 
+ 
 DW, DH = 280, 340   # 设计尺寸(逻辑像素),绘制时按窗口实际大小等比缩放
-
-
+ 
+ 
 class DesktopCat(QWidget):
     def __init__(self):
         super().__init__()
@@ -114,7 +118,7 @@ class DesktopCat(QWidget):
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.scale_factor = load_scale()
         self.resize(int(DW * self.scale_factor), int(DH * self.scale_factor))
-
+ 
         # 状态
         self.eye_openness = 0.35     # 默认半眯 (嫌弃脸)
         self.blink_state = 0
@@ -130,85 +134,85 @@ class DesktopCat(QWidget):
         self.last_cursor = QCursor.pos()
         self.pomo_end = None
         self.last_chime = None
-
+ 
         # 初始位置:屏幕右下角
         screen = QApplication.primaryScreen().availableGeometry()
         self.move(screen.right() - self.width() - 40,
                   screen.bottom() - self.height() + 20)
-
+ 
         # 动画循环 (尾巴 + 状态)
         self.timer = QTimer()
         self.timer.timeout.connect(self.animate)
         self.timer.start(50)
-
+ 
         # 眨眼
         self.blink_timer = QTimer()
         self.blink_timer.timeout.connect(self.blink)
         self._schedule_blink()
-
+ 
         # 随机发呆说话
         self.idle_timer = QTimer()
         self.idle_timer.timeout.connect(self.idle_action)
         self.idle_timer.start(9000)
-
+ 
         # 整点报时检查
         self.clock_timer = QTimer()
         self.clock_timer.timeout.connect(self.check_clock)
         self.clock_timer.start(15000)
-
+ 
     # ---------- 动画 ----------
     def _schedule_blink(self):
         self.blink_timer.start(random.randint(2500, 5500))
-
+ 
     def blink(self):
         self.blink_state = 1
         QTimer.singleShot(140, self._end_blink)
         self.blink_timer.stop()
-
+ 
     def _end_blink(self):
         self.blink_state = 0
         self._schedule_blink()
-
+ 
     def animate(self):
         self.tick += 1
         speed = 0.25 if self.sleeping else 1.2
         self.tail_angle += self.tail_dir * speed
         if abs(self.tail_angle) > 14:
             self.tail_dir *= -1
-
+ 
         if self.speech and self.speech_timer > 0:
             self.speech_timer -= 1
             if self.speech_timer == 0:
                 self.speech = None
-
+ 
         # 跟随鼠标
         if self.follow and not self.drag_pos:
             self.follow_cursor()
-
+ 
         # 番茄钟
         if self.pomo_end is not None and time.time() >= self.pomo_end:
             self.pomo_end = None
             self.wake()
             self.say(random.choice(POMO_END_LINES), 160)
-
+ 
         # 闲置睡觉
         if (not self.sleeping and not self.drag_pos
                 and time.time() - self.last_active > 60):
             self.sleeping = True
         self.update()
-
+ 
     def showEvent(self, event):
         super().showEvent(event)
         wh = self.windowHandle()
         if wh is not None and not getattr(self, "_screen_hooked", False):
             self._screen_hooked = True
             wh.screenChanged.connect(self.fix_size)
-
+ 
     def fix_size(self, *args):
         # 跨不同缩放比例的屏幕后,Qt可能改动窗口大小,延迟复位
         QTimer.singleShot(80, lambda: self.resize(
             int(DW * self.scale_factor), int(DH * self.scale_factor)))
-
+ 
     def set_scale(self, f):
         # 以猫脚底中心为锚点缩放,不会跳位置
         cx = self.x() + self.width() // 2
@@ -224,18 +228,18 @@ class DesktopCat(QWidget):
         self.move(nx, ny)
         save_scale(f)
         self.wake()
-        self.say(random.choice(["这样可以吗?", "尺寸已调整。", "好了好了。"]), 50)
-
+        self.say(random.choice(SCALE_LINES), 50)
+ 
     def wake(self):
         self.last_active = time.time()
         self.sleeping = False
-
+ 
     def follow_cursor(self):
         cur = QCursor.pos()
         if cur != self.last_cursor:
             self.last_cursor = cur
             if self.sleeping:
-                self.say("唔...?", 40)
+                self.say("嗯?你动了?", 40)
             self.wake()
         if self.sleeping:
             return
@@ -251,7 +255,7 @@ class DesktopCat(QWidget):
         step = max(2.0, min(8.0, dist * 0.05))
         self.move(int(round(self.x() + dx / dist * step)),
                   int(round(self.y() + dy / dist * step)))
-
+ 
     def check_clock(self):
         now = datetime.now()
         key = (now.date(), now.hour)
@@ -259,21 +263,21 @@ class DesktopCat(QWidget):
             self.last_chime = key
             self.wake()
             self.say(random.choice(CHIME_LINES).format(h=now.hour), 160)
-
+ 
     def toggle_follow(self, checked):
         self.follow = checked
         self.wake()
-        self.say("来了来了~" if checked else "不跟了。", 60)
-
+        self.say(random.choice(FOLLOW_ON_LINES if checked else FOLLOW_OFF_LINES), 60)
+ 
     def start_pomodoro(self):
         self.pomo_end = time.time() + 25 * 60
         self.wake()
         self.say(random.choice(POMO_START_LINES), 80)
-
+ 
     def cancel_pomodoro(self):
         self.pomo_end = None
-        self.say("番茄钟取消了。", 60)
-
+        self.say(random.choice(POMO_CANCEL_LINES), 60)
+ 
     def idle_action(self):
         # 下次随机间隔,不再死板每9秒一句
         self.idle_timer.setInterval(random.randint(6000, 14000))
@@ -289,17 +293,17 @@ class DesktopCat(QWidget):
             elif 11 <= h < 14:
                 pool = NOON_LINES
         self.say(random.choice(pool), 65)
-
+ 
     def say(self, text, duration=60):
         self.speech = text
         self.speech_timer = duration
         self.update()
-
+ 
     # ---------- 绘制 ----------
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
-
+ 
         # 参考照片的配色
         tabby_dark = QColor(75, 62, 48)
         tabby_light = QColor(178, 158, 132)
@@ -309,16 +313,16 @@ class DesktopCat(QWidget):
         pink_nose = QColor(202, 132, 132)
         ear_pink = QColor(222, 168, 168)
         eye_green = QColor(150, 172, 128)
-
+ 
         # 窗口被系统改尺寸(跨屏DPI不同)时,整只猫等比缩放,保证完整显示
         sc = min(self.width() / DW, self.height() / DH)
         p.translate(self.width() / 2, self.height())
         p.scale(sc, sc)
         p.translate(-DW / 2, -DH)
-
+ 
         cx = DW // 2
         base_y = DH - 30
-
+ 
         # ---- 尾巴 (在身体后面) ----
         p.save()
         p.translate(cx + 60, base_y - 45)
@@ -333,7 +337,7 @@ class DesktopCat(QWidget):
             y = -28 - i * 22
             p.drawLine(4 + i * 2, y, 14 + i * 2, y - 3)
         p.restore()
-
+ 
         # ---- 身体 (白色蹲坐) ----
         body = QPainterPath()
         body.moveTo(cx - 72, base_y)
@@ -343,30 +347,30 @@ class DesktopCat(QWidget):
         p.setBrush(white_fur)
         p.setPen(QPen(white_shade, 1))
         p.drawPath(body)
-
+ 
         # 胸口阴影层次
         chest = QPainterPath()
         chest.addEllipse(cx - 32, base_y - 105, 64, 55)
         p.setBrush(QColor(255, 252, 245, 180))
         p.setPen(Qt.NoPen)
         p.drawPath(chest)
-
+ 
         # ---- 头 ----
         hcx = cx
         hcy = base_y - 185
-
+ 
         head = QPainterPath()
         head.addEllipse(hcx - 62, hcy - 55, 124, 118)
         p.setBrush(tabby_light)
         p.setPen(Qt.NoPen)
         p.drawPath(head)
-
+ 
         # 白色下巴/口鼻
         chin = QPainterPath()
         chin.addEllipse(hcx - 46, hcy - 3, 92, 66)
         p.setBrush(white_fur)
         p.drawPath(chin)
-
+ 
         # 额头虎斑纹 (M 字纹)
         p.setPen(QPen(tabby_dark, 3, Qt.SolidLine, Qt.RoundCap))
         p.drawLine(hcx - 22, hcy - 46, hcx - 17, hcy - 24)
@@ -378,7 +382,7 @@ class DesktopCat(QWidget):
         p.drawLine(hcx + 56, hcy - 16, hcx + 40, hcy - 10)
         p.drawLine(hcx - 56, hcy - 4, hcx - 42, hcy + 2)
         p.drawLine(hcx + 56, hcy - 4, hcx + 42, hcy + 2)
-
+ 
         # ---- 耳朵 (大三角) ----
         for side in (-1, 1):
             ear = QPainterPath()
@@ -389,7 +393,7 @@ class DesktopCat(QWidget):
             p.setBrush(tabby_light)
             p.setPen(Qt.NoPen)
             p.drawPath(ear)
-
+ 
             inner = QPainterPath()
             inner.moveTo(hcx + side * 52, hcy - 45)
             inner.lineTo(hcx + side * 58, hcy - 80)
@@ -397,7 +401,7 @@ class DesktopCat(QWidget):
             inner.closeSubpath()
             p.setBrush(ear_pink)
             p.drawPath(inner)
-
+ 
         # ---- 眼睛 (标志性的半眯嫌弃脸) ----
         eye_y = hcy - 14
         if self.sleeping:
@@ -437,7 +441,7 @@ class DesktopCat(QWidget):
             p.setPen(QPen(tabby_dark, 2.2, Qt.SolidLine, Qt.RoundCap))
             p.drawLine(hcx - 34, eye_y - 2, hcx - 12, eye_y - 5)
             p.drawLine(hcx + 12, eye_y - 5, hcx + 34, eye_y - 2)
-
+ 
         # ---- 鼻子 ----
         nose = QPainterPath()
         nose.moveTo(hcx - 7, hcy + 9)
@@ -447,7 +451,7 @@ class DesktopCat(QWidget):
         p.setBrush(pink_nose)
         p.setPen(QPen(QColor(148, 88, 88), 1))
         p.drawPath(nose)
-
+ 
         # ---- 嘴巴 (Ω) ----
         p.setPen(QPen(tabby_dark, 1.5, Qt.SolidLine, Qt.RoundCap))
         p.setBrush(Qt.NoBrush)
@@ -460,13 +464,13 @@ class DesktopCat(QWidget):
         m2.moveTo(hcx, hcy + 24)
         m2.quadTo(hcx + 6, hcy + 28, hcx + 11, hcy + 23)
         p.drawPath(m2)
-
+ 
         # ---- 胡须 ----
         p.setPen(QPen(QColor(232, 226, 216), 1.3))
         for dy, dx2 in [(15, 8), (18, 18), (21, 28)]:
             p.drawLine(hcx - 18, hcy + dy, hcx - 56, hcy + dx2)
             p.drawLine(hcx + 18, hcy + dy, hcx + 56, hcy + dx2)
-
+ 
         # ---- 前爪 ----
         p.setBrush(white_fur)
         p.setPen(QPen(white_shade, 1))
@@ -477,7 +481,7 @@ class DesktopCat(QWidget):
             p.drawLine(int(cx + x), int(base_y - 10), int(cx + x), int(base_y - 2))
         for x in [13, 22, 31]:
             p.drawLine(int(cx + x), int(base_y - 10), int(cx + x), int(base_y - 2))
-
+ 
         # ---- 睡觉 Zzz ----
         if self.sleeping:
             for i in range(3):
@@ -486,7 +490,7 @@ class DesktopCat(QWidget):
                 p.setPen(QColor(90, 100, 140, alpha))
                 p.setFont(QFont("Arial", 11 + i * 2, QFont.Bold))
                 p.drawText(int(hcx + 50 + t * 14), int(hcy - 55 - t * 18), "Z")
-
+ 
         # ---- 番茄钟倒计时 ----
         if self.pomo_end is not None:
             remain = max(0, int(self.pomo_end - time.time()))
@@ -499,7 +503,7 @@ class DesktopCat(QWidget):
             p.setPen(QColor(255, 255, 255))
             p.drawText(int(cx - lw / 2), DH - 24, int(lw), 20,
                        Qt.AlignCenter, label)
-
+ 
         # ---- 对话气泡 ----
         if self.speech:
             p.setFont(QFont("Microsoft YaHei", 10, QFont.Bold))
@@ -509,11 +513,11 @@ class DesktopCat(QWidget):
             bw, bh = tw + 22, th + 12
             bx = min(cx + 40, DW - bw - 4)
             by = max(2, hcy - 95)
-
+ 
             p.setBrush(QColor(255, 255, 255, 235))
             p.setPen(QPen(QColor(80, 80, 80), 1.5))
             p.drawRoundedRect(int(bx), int(by), int(bw), int(bh), 10, 10)
-
+ 
             tail_b = QPainterPath()
             tail_b.moveTo(bx + 6, by + bh)
             tail_b.lineTo(bx - 4, by + bh + 10)
@@ -522,10 +526,10 @@ class DesktopCat(QWidget):
             p.setBrush(QColor(255, 255, 255, 235))
             p.setPen(QPen(QColor(80, 80, 80), 1.5))
             p.drawPath(tail_b)
-
+ 
             p.setPen(QColor(40, 40, 40))
             p.drawText(int(bx + 11), int(by + th + 1), self.speech)
-
+ 
     # ---------- 交互 ----------
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -536,20 +540,20 @@ class DesktopCat(QWidget):
             event.accept()
         elif event.button() == Qt.RightButton:
             self.show_menu(event.globalPos())
-
+ 
     def mouseMoveEvent(self, event):
         if self.drag_pos and event.buttons() & Qt.LeftButton:
             self.move(event.globalPos() - self.drag_pos)
             event.accept()
-
+ 
     def mouseReleaseEvent(self, event):
         self.drag_pos = None
         self.last_active = time.time()
-
+ 
     def mouseDoubleClickEvent(self, event):
         self.wake()
         self.say(random.choice(PAT_LINES), 65)
-
+ 
     def build_menu(self):
         menu = QMenu(self)
         menu.setStyleSheet("""
@@ -557,21 +561,21 @@ class DesktopCat(QWidget):
             QMenu::item { padding:6px 22px; font-family:'Microsoft YaHei'; }
             QMenu::item:selected { background:#e6e6e6; }
         """)
-
+ 
         a1 = QAction("打个招呼", self)
-        a1.triggered.connect(lambda: self.say("你好呀!", 60))
+        a1.triggered.connect(lambda: self.say(random.choice(HELLO_LINES), 60))
         menu.addAction(a1)
-
+ 
         a2 = QAction("喵一下", self)
-        a2.triggered.connect(lambda: self.say("喵~", 50))
+        a2.triggered.connect(lambda: self.say(random.choice(MEOW_LINES), 50))
         menu.addAction(a2)
-
+ 
         a3 = QAction("来句骚话", self)
         a3.triggered.connect(lambda: self.say(random.choice(SASS_LINES), 90))
         menu.addAction(a3)
-
+ 
         menu.addSeparator()
-
+ 
         # 大小
         size_menu = menu.addMenu("大小")
         group = QActionGroup(size_menu)
@@ -583,13 +587,13 @@ class DesktopCat(QWidget):
             act.triggered.connect(lambda _checked, f=f: self.set_scale(f))
             group.addAction(act)
             size_menu.addAction(act)
-
+ 
         af = QAction("跟着鼠标走", self)
         af.setCheckable(True)
         af.setChecked(self.follow)
         af.triggered.connect(self.toggle_follow)
         menu.addAction(af)
-
+ 
         if self.pomo_end is None:
             ap = QAction("开始番茄钟 (25分钟)", self)
             ap.triggered.connect(self.start_pomodoro)
@@ -597,17 +601,17 @@ class DesktopCat(QWidget):
             ap = QAction("取消番茄钟", self)
             ap.triggered.connect(self.cancel_pomodoro)
         menu.addAction(ap)
-
+ 
         menu.addSeparator()
         aq = QAction("退出", self)
         aq.triggered.connect(QApplication.quit)
         menu.addAction(aq)
         return menu
-
+ 
     def show_menu(self, pos):
         self.wake()
         self.build_menu().exec_(pos)
-
+ 
 def main():
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
@@ -618,7 +622,8 @@ def main():
     cat = DesktopCat()
     cat.show()
     sys.exit(app.exec_())
-
-
+ 
+ 
 if __name__ == "__main__":
     main()
+ 
